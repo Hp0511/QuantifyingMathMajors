@@ -1,0 +1,22 @@
+Course,Prereq1,Prereq2,Prereq3
+Math 130,,,
+CS 100,,,
+Math 135,Math 130,,
+Math 145,Math 135,,
+Math 213,Math 145,,
+Math 220,Math 145,,
+Math 300,Math 145,,
+Math 395,Math 300,,
+Math 400,Math 213,Math 300,
+Math 410,Math 213,Math 300,
+Math 413,Math 213,Math 300,
+Math 440,Math 213,Math 300,
+Math 445,Math 213,Math 300,
+Math 447,Math 213,Math 300,
+Math 415,Math 213,Math 220,CS 100
+Math 420,Math 213,Math 220,CS 100
+Math 422,Math 213,Math 220,CS 100
+Math 425,Math 213,Math 220,CS 100
+Math 430,Math 213,Math 220,CS 100
+Math 434,Math 213,Math 220,CS 100
+Math 435,Math 213,Math 220,CS 100
