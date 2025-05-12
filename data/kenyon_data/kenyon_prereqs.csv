@@ -1,0 +1,33 @@
+Course,Prereq1,Prereq2
+Math 111,,
+Math 112,Math 111,
+Math 213,Math 112,
+Math 222,Math 213,
+Math 224,Math 213,
+COMP 118,,
+STAT 106,,
+Math 480,Math 222,Math 322
+Math 335,Math 222,
+Math 435,Math 335,
+Math 327,Math 222,
+Math 328,Math 224,
+Math 322,Math 222,
+Math 341,Math 213,Math 222
+Math 441,Math 341,
+Math 360,Math 222,
+Math 230,Math 222,
+Math 352,Math 224,
+Math 336,Math 213,
+Math 233,Math 224,
+Math 258,Math 111,
+Math 325,Math 224,
+Math 330,Math 213,
+Math 333,Math 224,
+Math 347,STAT 106,Math 224
+COMP 218,COMP 118,
+STAT 206,STAT 106,
+STAT 436,Math 336,
+STAT 416,STAT 106,Math 224
+STAT 216,STAT 106,
+STAT 226,STAT 106,
+STAT 306,STAT 216,
