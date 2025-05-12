@@ -1,30 +1,25 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Graph building
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BUILD COMBINATION GRAPH - REUSED NODES FOR SAME COMBO+TERM
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [graph, nodeTable, roots] = buildCombinationGraph(courses, termNames, totalOfferedCourseSet, maxCourses, year)
-    
-    % Setting up the graph
     graph = digraph();
     nodeTable = table([], {}, {}, 'VariableNames', {'ID', 'ClassCombination', 'Term'}); 
-    nodeMap = containers.Map('KeyType', 'char', 'ValueType', 'char'); % Making sure that no node is duplicates
+    nodeMap = containers.Map('KeyType', 'char', 'ValueType', 'char');
     prevNodes = {}; 
     roots = {}; 
     nodeCounter = 1; 
 
     firstTermCombinations = getFirstTermCourses(courses, totalOfferedCourseSet, maxCourses);
+    disp(firstTermCombinations);
     for i = 1:length(firstTermCombinations)
         combination = firstTermCombinations{i};
         term = termNames{1};
         classCombination = strjoin(sort(combination), '-');
         nodeKey = strcat(classCombination, '-', term);
 
-        % If it is the same node then connect the previous term to the
-        % existing node
-        
         if isKey(nodeMap, nodeKey)
             nodeId = nodeMap(nodeKey);
         else
@@ -34,7 +29,7 @@ function [graph, nodeTable, roots] = buildCombinationGraph(courses, termNames, t
             nodeTable = [nodeTable; newNode];
             nodeMap(nodeKey) = nodeId;
             nodeCounter = nodeCounter + 1;
-        end
+        end 
 
         prevNodes{end+1} = struct('id', nodeId, 'courses', combination, 'term', term);
         roots{end+1} = nodeId;
@@ -43,20 +38,10 @@ function [graph, nodeTable, roots] = buildCombinationGraph(courses, termNames, t
     for termIndex = 2:min(year * 2, numel(termNames))
         newNodes = {}; 
         term = termNames{termIndex}; 
-        disp(term);
-        if startsWith(term, 'J')
-            maxCourses = 1;
-            disp(maxCourses);
-        else
-            % Define maxCourses for other terms as needed.
-            maxCourses = 4;
-            disp(maxCourses);
-        end
-        
+
         for i = 1:length(prevNodes)
             takenCourses = prevNodes{i}.courses; 
             nextCombinations = getNextTermCourses(courses, totalOfferedCourseSet, termIndex, takenCourses, maxCourses);
-
             for j = 1:length(nextCombinations)
                 nextCombination = setdiff(nextCombinations{j}, takenCourses);
                 if isempty(nextCombination)
@@ -75,12 +60,12 @@ function [graph, nodeTable, roots] = buildCombinationGraph(courses, termNames, t
                     nodeMap(nodeKey) = nodeId;
                     nodeCounter = nodeCounter + 1;
                 end
-               
+
                 if ~ismember(nodeId, successors(graph, prevNodes{i}.id))
                     graph = addedge(graph, prevNodes{i}.id, nodeId);
                 end
 
-                newCourses = unique([takenCourses, nextCombination]);
+                newCourses = unique([takenCourses(:)', nextCombination(:)']);
                 newNodes{end+1} = struct('id', nodeId, 'courses', newCourses, 'term', term);
             end
         end
@@ -91,21 +76,44 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % GENERATE COURSE COMBINATIONS FOR FIRST TERM
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% function courseCombinations = getFirstTermCourses(courses, totalOfferedCourseSet, maxCourses)
+%     noPrereqs = string(courses.Nodes.Name(outdegree(courses) == 0));
+%     % Courses offered in the first semester
+%     offeredCoursesFirstTerm = string(totalOfferedCourseSet{1});
+%     % Filter courses with no prerequisites that are also offered in the first term
+%     validCoursesFirstTerm = intersect(noPrereqs, offeredCoursesFirstTerm);
+% 
+%     % Generate all possible subsets of valid courses (up to maxCourses)
+%     courseCombinations = {};
+%     for numCourses = 1:min(maxCourses, length(validCoursesFirstTerm))
+%         combos = nchoosek(validCoursesFirstTerm, numCourses); % Generate subsets
+%         for i = 1:size(combos, 1)
+%             courseCombinations{end + 1} = combos(i, :);
+%         end
+%     end
+%     disp(courseCombinations);
+% end
+
+%Take the most course in the first semester as possible
 function courseCombinations = getFirstTermCourses(courses, totalOfferedCourseSet, maxCourses)
+    % Find courses with no prerequisites
     noPrereqs = string(courses.Nodes.Name(outdegree(courses) == 0));
+
     % Courses offered in the first semester
     offeredCoursesFirstTerm = string(totalOfferedCourseSet{1});
-    % Filter courses with no prerequisites that are also offered in the first term
+
+    % Valid courses: no prerequisites + offered in this term
     validCoursesFirstTerm = intersect(noPrereqs, offeredCoursesFirstTerm);
-    
-    % Generate all possible subsets of valid courses (up to maxCourses)
-    courseCombinations = {};
-    for numCourses = 1:min(maxCourses, length(validCoursesFirstTerm))
-        combos = nchoosek(validCoursesFirstTerm, numCourses); % Generate subsets
-        for i = 1:size(combos, 1)
-            courseCombinations{end + 1} = combos(i, :);
-        end
+
+    % Limit to maximum allowed per term
+    maxToTake = min(maxCourses, length(validCoursesFirstTerm));
+
+    % Greedy: take the biggest possible combination but output as a cell of course arrays
+    if maxToTake > 0
+        courseCombinations = {validCoursesFirstTerm(1:maxToTake)}; % keep in { ... } format
+    else
+        courseCombinations = {};  % No valid courses
     end
 end
 
@@ -114,33 +122,38 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function nextTermCourseCombinations = getNextTermCourses(courses, totalOfferedCourseSet, TermIndex, allTakenCourses, maxCourses)
     offeredCoursesNextTerm = string(totalOfferedCourseSet{TermIndex});
-    % Initialize the list of valid courses
     validCoursesNextTerm = [];
-    
-    % Check each course offered in the next term
+
+    % Validate each course offered in the next term
     for i = 1:length(offeredCoursesNextTerm)
-        course = offeredCoursesNextTerm(i); % Current course to validate
-        % Map the course name to its numeric index
+        course = offeredCoursesNextTerm(i);
         courseID = findnode(courses, course);
-        % Find the prerequisites of this course (successors in the graph) 
-        % Only work in nodeID
-        prereqIDs = successors(courses, courseID);
-        % Convert prerequisite IDs to names
-        prereqNames = string(courses.Nodes.Name(prereqIDs)); %courses.Node.Name is a cell array
-        % Check if all prerequisites are in the taken courses
+        prereqIDs = successors(courses, courseID); % Prerequisites
+        prereqNames = string(courses.Nodes.Name(prereqIDs));
+
+        % If all prerequisites satisfied, mark course as valid
         if all(ismember(prereqNames, allTakenCourses))
-            validCoursesNextTerm = [validCoursesNextTerm; course]; % Add to valid courses
+            validCoursesNextTerm = [validCoursesNextTerm; course];
         end
-   
     end
-    
+
+    % Remove courses already taken
     validCoursesNextTerm = setdiff(validCoursesNextTerm, allTakenCourses);
-    % Generate all possible subsets of valid courses (up to maxCourses)
+    % Initialize output
     nextTermCourseCombinations = {};
-    for numCourses = 1:min(maxCourses, length(validCoursesNextTerm))
-        combos = nchoosek(validCoursesNextTerm, numCourses); % Generate subsets
-        for i = 1:size(combos, 1)
-            nextTermCourseCombinations{end + 1} = combos(i, :); % Add each combination
+
+    % If there are valid courses to take
+    if ~isempty(validCoursesNextTerm)
+        maxToTake = min(maxCourses, length(validCoursesNextTerm));
+
+        if length(validCoursesNextTerm) > maxToTake
+            % Only consider combinations at the maximum course load
+            combos = nchoosek(validCoursesNextTerm, maxToTake);
+            for i = 1:size(combos, 1)
+                nextTermCourseCombinations{end + 1} = combos(i, :);
+            end
+        else
+            nextTermCourseCombinations = {validCoursesNextTerm(:)'}; 
         end
     end
 end
