@@ -1,124 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Graph building
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function [graph, nodeTable, roots] = buildCombinationGraph(courses, termNames, totalOfferedCourseSet, maxCourses, year)
-%     % Create a directed graph (only stores node IDs and edges)
-%     graph = digraph();
-% 
-%     % Initialize table for storing node attributes
-%     nodeTable = table([], {}, {}, 'VariableNames', {'ID', 'ClassCombination', 'Term'}); 
-% 
-%     % Map to track unique nodes 
-%     nodeMap = containers.Map('KeyType', 'char', 'ValueType', 'char');
-% 
-%     prevNodes = {}; % Nodes from the previous term
-%     roots = {}; % Store root nodes explicitly
-%     nodeCounter = 1; % Unique node ID counter
-% 
-%     % Generate root nodes (combinations for the first term)
-%     firstTermCombinations = getFirstTermCourses(courses, totalOfferedCourseSet, maxCourses);
-%     % Add first-term nodes to the graph
-%     for i = 1:length(firstTermCombinations)
-%         combination = firstTermCombinations{i};
-%         term = termNames{1};
-%         classCombination = strjoin(combination, '-');
-%         nodeKey = strcat(classCombination, '-', term); % Unique key for the node
-% 
-%         % Check if node already exists
-%         if isKey(nodeMap, nodeKey)
-%             nodeId = nodeMap(nodeKey); % Use existing node ID
-%         else
-%             nodeId = num2str(nodeCounter); % Generate new node ID
-%             graph = addnode(graph, nodeId); % Add node to graph
-% 
-%             % Store node properties
-%             newNode = table({nodeId}, {classCombination}, {term}, ...
-%                             'VariableNames', {'ID', 'ClassCombination', 'Term'});
-%             nodeTable = [nodeTable; newNode];
-% 
-%             % Store in nodeMap to prevent duplicates
-%             nodeMap(nodeKey) = nodeId;
-%             nodeCounter = nodeCounter + 1;
-%         end
-% 
-%         prevNodes{end+1} = struct('id', nodeId, 'courses', combination, 'term', term);
-%         roots{end+1} = nodeId;
-%     end
-% 
-%     % Iteratively add nodes for subsequent terms
-%     for termIndex = 2:min(year * 2, numel(termNames))
-%         newNodes = {}; % Nodes for the current term
-%         term = termNames{termIndex}; % Get term name
-% 
-%         % Generate combinations for the current term based on prevNodes
-%         for i = 1:length(prevNodes)
-%             takenCourses = prevNodes{i}.courses; % Courses already taken
-%             nextCombinations = getNextTermCourses(courses, totalOfferedCourseSet, termIndex, takenCourses, maxCourses);
-% 
-%             for j = 1:length(nextCombinations)
-%                 nextCombination = nextCombinations{j};
-%                 disp("Here is next Combination");
-%                 disp(nextCombination);
-%                 disp("Here are taken Courses");
-%                 disp(takenCourses);
-% 
-%                 nextCombination = setdiff(nextCombination,takenCourses);
-%                 disp("difference");
-%                 disp(nextCombination);
-%                 overlappingCourses = intersect(nextCombination, takenCourses);
-%                 if ~isempty(overlappingCourses)
-%                     disp("Overlapping Courses Detected:");
-%                     disp(overlappingCourses);
-%                     break;
-%                 end
-%                 classCombination = strjoin(nextCombination, '-');
-%                 nodeKey = strcat(classCombination, '-', term); % Unique key for the node
-% 
-%                 % Check if node already exists
-%                 if isKey(nodeMap, nodeKey)
-%                     nodeId = nodeMap(nodeKey); % Use existing node ID
-%                 else
-%                     nodeId = num2str(nodeCounter);
-%                     graph = addnode(graph, nodeId);
-% 
-%                     % Store node properties
-%                     newNode = table({nodeId}, {classCombination}, {term}, ...
-%                                     'VariableNames', {'ID', 'ClassCombination', 'Term'});
-%                     nodeTable = [nodeTable; newNode];
-% 
-%                     % Store in nodeMap to prevent duplicates
-%                     nodeMap(nodeKey) = nodeId;
-%                     nodeCounter = nodeCounter + 1;
-%                 end
-%                 nodeId = num2str(nodeCounter);
-%                 graph = addnode(graph, nodeId);
-% 
-%                 % Store node properties
-%                 newNode = table({nodeId}, {classCombination}, {term}, ...
-%                                 'VariableNames', {'ID', 'ClassCombination', 'Term'});
-%                 nodeTable = [nodeTable; newNode];
-% 
-%                 % Store in nodeMap to prevent duplicates
-%                 nodeMap(nodeKey) = nodeId;
-%                 nodeCounter = nodeCounter + 1;
-%                 % Add edge from previous node to the current node (only if it does not exist)
-%                 if ~ismember(nodeId, successors(graph, prevNodes{i}.id))
-%                     graph = addedge(graph, prevNodes{i}.id, nodeId);
-%                 end
-% 
-%                 % Track the node for the next iteration
-%                 % Inside buildCombinationGraph where newNodes are tracked
-%                 newCourses = unique([takenCourses, nextCombination]); % Prevent duplicate courses
-%                 % Store new node
-%                 newNodes{end+1} = struct('id', nodeId, 'courses', newCourses, 'term', term);
-%                 disp(newNodes{i});
-%             end
-%         end
-% 
-%         % Update previous nodes for the next term
-%         prevNodes = newNodes;
-%     end
-% end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % BUILD COMBINATION GRAPH - REUSED NODES FOR SAME COMBO+TERM
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -186,13 +69,7 @@ function [graph, nodeTable, roots] = buildCombinationGraph(courses, termNames, t
                     nodeMap(nodeKey) = nodeId;
                     nodeCounter = nodeCounter + 1;
                 end
-                
-                % nodeId = num2str(nodeCounter);
-                % graph = addnode(graph, nodeId);
-                % newNode = table({nodeId}, {classCombination}, {term}, 'VariableNames', {'ID', 'ClassCombination', 'Term'});
-                % nodeTable = [nodeTable; newNode];
-                % nodeMap(nodeKey) = nodeId;
-                % nodeCounter = nodeCounter + 1;
+               
                 if ~ismember(nodeId, successors(graph, prevNodes{i}.id))
                     graph = addedge(graph, prevNodes{i}.id, nodeId);
                 end
