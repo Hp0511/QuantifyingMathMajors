@@ -117,9 +117,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHECK IF A PATH SATISFIES ANY MINIMAL REQUIREMENT SET
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function isSatisfied = checkMinimalRequirement(coursesTaken, minimalRequirementSets)
-%     isSatisfied = any(cellfun(@(reqSet) isequal(sort(coursesTaken), sort(reqSet)), minimalRequirementSets));
-% end
 function isSatisfied = checkMinimalRequirement(coursesTaken, minimalRequirementMap)
     sortedKey = strjoin(unique(sort(coursesTaken)), '+');
     isSatisfied = isKey(minimalRequirementMap, sortedKey);
