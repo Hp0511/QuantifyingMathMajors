@@ -25,6 +25,7 @@ clear ii;
 % Create graph for courses
 courses = digraph(course_prereq_pairs(:,1), course_prereq_pairs(:,2));
 courses = rmnode(courses, "");  % Remove empty string nodes
+% Plotting prereqs tree
 % plot(courses);
 
 % Parse bucket structure
@@ -49,12 +50,13 @@ totalOfferedCourseSet = getOfferedCourses(courseSchedules,startTerm);
 termNames = flip(courseSchedules.Properties.VariableNames(2:end)); % Skip the first column F2021 F2024
 disp(termNames);
 [graph, nodetable, dfsRoots] = buildCombinationGraph(courses,termNames, totalOfferedCourseSet, maxCourseperTerm, year);
+
+% Plotting the grpah for completing major
 % plot(graph);
 % Step 4: Perform DFS to find valid paths that satisfy all buckets
 [legit,validPaths] = dfsFindValidPaths(graph, dfsRoots, nodetable, minimalRequirementSet);
 
 %Step 5: Display valid Courses for checking
-% [validCourses, allUnique] = extractValidCoursesBySemester(validPaths, nodetable);
 validCourses = extractValidCoursesBySemester(validPaths, nodetable);
 shortestPaths = findAllShortestValidCoursePaths(validCourses);
 
